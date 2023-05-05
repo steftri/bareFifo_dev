@@ -22,8 +22,6 @@ void tearDown(void)
 
 void test_empty_fifo(void) 
 {
-  char ac_Buffer[8];
-
   TEST_ASSERT_TRUE(MyFifo.isEmpty());
   TEST_ASSERT_EQUAL_INT32(0, MyFifo.available());
   TEST_ASSERT_EQUAL_INT32(8, MyFifo.availableForWrite());
@@ -33,8 +31,6 @@ void test_empty_fifo(void)
 
 void test_fifo_almost_empty_or_full(void) 
 {
-  uint8_t au8_Buffer[8];
-
   MyFifo.write((const uint8_t*)"1", 1);
   TEST_ASSERT_FALSE(MyFifo.isEmpty());
   TEST_ASSERT_TRUE(MyFifo.isAlmostEmpty());
@@ -84,8 +80,6 @@ void test_fifo_reset(void)
 
 void test_fifo_overflow(void) 
 {
-  uint8_t au8_Buffer[8];
-
   MyFifo.reset();
   MyFifo.write((const uint8_t*)"12345678", 8);
   TEST_ASSERT_FALSE(MyFifo.isOverflow());
@@ -141,6 +135,7 @@ void test_fifo_write_wraparound_1(void)
   MyFifo.reset();
   u32_Written = MyFifo.write((const uint8_t*)"123456", 6);  // FIFO content shoud be "123456.."
   u32_Read = MyFifo.read(au8_Buffer, 8);                    // FIFO content shoud be "........"
+  TEST_ASSERT_EQUAL_INT32(6, u32_Written);
   TEST_ASSERT_EQUAL_INT32(6, u32_Read);
   TEST_ASSERT_EQUAL_UINT8_ARRAY((const uint8_t*)"123456", au8_Buffer, 6); 
 
