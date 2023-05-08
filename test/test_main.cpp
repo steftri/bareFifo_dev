@@ -4,18 +4,20 @@
 #include "barefifo.h"
 
 
-uint8_t gau8_FifoBuffer[10]={0xEF, 0, 0, 0, 0, 0, 0, 0, 0, 0xEF};
-BareFifo MyFifo(gau8_FifoBuffer+1, 8);
+uint8_t gau8_FifoBuffer[4+8+4]={0xEF, 0xEF, 0xEF, 0xEF, 0, 0, 0, 0, 0, 0, 0, 0, 0xEF, 0xEF, 0xEF, 0xEF};
+BareFifo MyFifo(gau8_FifoBuffer+4, 8);
 
 
 void setUp(void) 
 {
-    // set stuff up here
+  // set stuff up here
+  MyFifo.begin();
 }
 
 void tearDown(void) 
 {
-    // clean stuff up here
+  // clean stuff up here
+  MyFifo.end();
 }
 
 
@@ -68,6 +70,9 @@ void test_fifo_reset(void)
 {
   uint8_t au8_Buffer[8];
 
+  MyFifo.begin();
+  TEST_ASSERT_TRUE(MyFifo.isEmpty());
+
   MyFifo.write((const uint8_t*)"1234", 4);
   MyFifo.read(au8_Buffer, 2);
   MyFifo.reset();
@@ -80,7 +85,8 @@ void test_fifo_reset(void)
 
 void test_fifo_overflow(void) 
 {
-  MyFifo.reset();
+  MyFifo.begin();
+
   MyFifo.write((const uint8_t*)"12345678", 8);
   TEST_ASSERT_FALSE(MyFifo.isOverflow());
 
@@ -101,7 +107,7 @@ void test_fifo_write_simple(void)
   uint8_t au8_Buffer[8];
   uint32_t u32_Read, u32_Written;
 
-  MyFifo.reset();
+  MyFifo.begin();
 
   u32_Written = MyFifo.write((const uint8_t*)"1234", 4);
   TEST_ASSERT_EQUAL_INT32(4, u32_Written);
@@ -132,7 +138,8 @@ void test_fifo_write_wraparound_1(void)
   uint8_t au8_Buffer[8];
   uint32_t u32_Read, u32_Written;
 
-  MyFifo.reset();
+  MyFifo.begin();
+
   u32_Written = MyFifo.write((const uint8_t*)"123456", 6);  // FIFO content shoud be "123456.."
   u32_Read = MyFifo.read(au8_Buffer, 8);                    // FIFO content shoud be "........"
   TEST_ASSERT_EQUAL_INT32(6, u32_Written);
@@ -151,7 +158,8 @@ void test_fifo_write_wraparound_2(void)
   uint8_t au8_Buffer[8];
   uint32_t u32_Read, u32_Written;
 
-  MyFifo.reset();
+  MyFifo.begin();
+
   u32_Written = MyFifo.write((const uint8_t*)"123456", 6);  // FIFO content shoud be "123456.."
   u32_Read = MyFifo.read(au8_Buffer, 8);                    // FIFO content shoud be "........"
   TEST_ASSERT_EQUAL_INT32(6, u32_Read);
@@ -173,6 +181,7 @@ void test_fifo_readwrite(void)
   uint32_t u32_Read, u32_Written;
 
   MyFifo.reset();
+
   u32_Written = MyFifo.write((const uint8_t*)"1234", 4);  // FIFO content shoud be "1234...."
   TEST_ASSERT_EQUAL_INT32(4, u32_Written);
   TEST_ASSERT_EQUAL_INT32(4, MyFifo.available());  
@@ -221,8 +230,15 @@ void test_fifo_readwrite(void)
 
 void test_fifo_electric_fence(void) 
 {
-  TEST_ASSERT_EQUAL_INT8(0xEF, gau8_FifoBuffer[0]);
-  TEST_ASSERT_EQUAL_INT8(0xEF, gau8_FifoBuffer[9]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[0]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[1]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[2]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[3]);
+
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[4+8+0]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[4+8+1]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[4+8+2]);
+  TEST_ASSERT_EQUAL_HEX8(0xEF, gau8_FifoBuffer[4+8+3]);
 }
 
 
