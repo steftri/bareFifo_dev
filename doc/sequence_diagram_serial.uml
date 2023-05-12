@@ -1,0 +1,74 @@
+@startuml
+
+participant system
+participant Serial
+participant DataConsumer
+
+box "library" #LightBlue
+  participant BareFifo
+end box
+
+
+
+  note over Serial, DataConsumer: typical case for serial device:\nreceive data in ISR, hardware\nhandshake (RTS) on serial line
+
+  [-> Serial ++ : some data
+
+  group Interrupt service routine
+
+    Serial -> BareFifo ++ : write()
+    BareFifo -> BareFifo ++ : copy data
+    deactivate BareFifo
+    return written bytes
+
+    Serial -> BareFifo ++ : isAlmostFull()
+    return return
+
+    alt FIFO is almost full
+      Serial -> Serial ++ : disable RTS\n(request to send)
+      deactivate Serial
+    end alt
+
+  end group
+  deactivate Serial
+
+group loop()
+
+  [-> DataConsumer ++ : data request
+  DataConsumer -> BareFifo ++ : available() 
+  return size
+
+  DataConsumer -> system : disable interrupts
+
+  group IRQ-protected section
+
+    DataConsumer -> BareFifo ++ : read()
+    BareFifo -> BareFifo ++ : copy data
+    deactivate BareFifo
+    return data
+
+  end group  
+
+  DataConsumer -> system : enable interrupts
+
+  alt RTS is disabled
+
+    DataConsumer -> BareFifo ++ : isAlmostEmpty() 
+    return return     
+
+    alt FIFO is almost empty
+
+      DataConsumer -> Serial ++ : enable RTS\n(request to send)
+      deactivate Serial
+
+    end alt
+
+  end alt
+
+  deactivate DataConsumer
+
+end group
+
+
+
+@enduml
