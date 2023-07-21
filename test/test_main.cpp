@@ -1,4 +1,7 @@
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
+
 #include <unity.h>
 
 #include "barefifo.h"
@@ -6,6 +9,7 @@
 
 uint8_t gau8_FifoBuffer[4+8+4]={0xEF, 0xEF, 0xEF, 0xEF, 0, 0, 0, 0, 0, 0, 0, 0, 0xEF, 0xEF, 0xEF, 0xEF};
 BareFifo MyFifo(gau8_FifoBuffer+4, 8);
+
 
 
 void setUp(void) 
@@ -245,7 +249,9 @@ void test_fifo_electric_fence(void)
 
 void setup()
 {
+#ifdef ARDUINO  
     delay(2000); // service delay
+#endif    
     UNITY_BEGIN();
 
     RUN_TEST(test_empty_fifo);
@@ -265,3 +271,13 @@ void setup()
 void loop()
 {
 }
+
+
+#ifndef ARDUINO
+int main(int argc, char *argv[])
+{
+  setup();
+  loop();
+  return 0;
+}
+#endif
